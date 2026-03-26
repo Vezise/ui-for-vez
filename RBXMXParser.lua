@@ -17,6 +17,33 @@ local SKIP_PROPS = {
 	DebugId = true,
 }
 
+local PRIORITY_EARLY = {
+	Size = true,
+	Shape = true,
+	MeshType = true,
+	MeshId = true,
+	FormFactor = true,
+	InitialSize = true,
+	PhysicalConfigData = true,
+	CanvasSize = true,
+	Face = true,
+}
+
+local PRIORITY_LATE = {
+	CFrame = true,
+	Position = true,
+	Orientation = true,
+	Rotation = true,
+	CoordinateFrame = true,
+	WorldPivot = true,
+	PivotOffset = true,
+	C0 = true,
+	C1 = true,
+	WorldPosition = true,
+	WorldCFrame = true,
+	Focus = true,
+}
+
 local FONT_WEIGHTS = {
 	[100] = Enum.FontWeight.Thin,
 	[200] = Enum.FontWeight.ExtraLight,
@@ -569,6 +596,22 @@ local function readProperty(propNode, sharedStrings: { [string]: string })
 	return nil
 end
 
+local function setProp(inst: Instance, propName: string, value: any)
+	pcall(function()
+		(inst :: any)[propName] = value
+	end)
+end
+
+local function applyBatch(batch, inst: Instance, sharedStrings: { [string]: string })
+	for _, propNode in batch do
+		local propName = getAttr(propNode, "name")
+		local readOk, value = pcall(readProperty, propNode, sharedStrings)
+		if readOk and value ~= nil then
+			setProp(inst, propName, value)
+		end
+	end
+end
+
 local function buildInstance(
 	itemNode,
 	sharedStrings: { [string]: string },
@@ -581,7 +624,7 @@ local function buildInstance(
 	local referent = getAttr(itemNode, "referent")
 	local inst = nil
 
-	local createOk, createErr = pcall(function()
+	local createOk = pcall(function()
 		inst = Instance.new(className)
 	end)
 
@@ -595,51 +638,45 @@ local function buildInstance(
 
 	local propsNode = getChild(itemNode, "Properties")
 	if propsNode then
-		local nameNode = nil
-		for _, propNode in propsNode.children do
-			if getAttr(propNode, "name") == "Name" then
-				nameNode = propNode
-				break
-			end
-		end
-		if nameNode then
-			pcall(function()
-				inst.Name = getText(nameNode)
-			end)
-		end
+		local earlyProps = {}
+		local normalProps = {}
+		local lateProps = {}
 
 		for _, propNode in propsNode.children do
 			local propName = getAttr(propNode, "name")
-			if propName and propName ~= "Name" and not SKIP_PROPS[propName] then
-				if propNode.tag == "Ref" then
-					local refId = string.gsub(getText(propNode), "%s+", "")
-					if refId ~= "" and refId ~= "null" and refId ~= "nil" then
-						table.insert(deferredRefs, { inst, propName, refId })
-					end
-				elseif propName == "Tags" and propNode.tag == "BinaryString" then
-					local decoded = b64decode(string.gsub(getText(propNode), "%s+", ""))
-					local tags = decodeTags(decoded)
-					for _, tag in tags do
-						pcall(CollectionService.AddTag, CollectionService, inst, tag)
-					end
-				elseif propName == "AttributesSerialize" and propNode.tag == "BinaryString" then
-					local decoded = b64decode(string.gsub(getText(propNode), "%s+", ""))
-					local attributes = decodeAttributes(decoded)
-					for attrName, attrValue in attributes do
-						pcall(inst.SetAttribute, inst, attrName, attrValue)
-					end
-				else
-					local readOk, value = pcall(readProperty, propNode, sharedStrings)
-					if readOk and value ~= nil then
-						if propName == "BrickColor" then
-							pcall(function() inst.BrickColor = value end)
-						else
-							pcall(function() (inst :: any)[propName] = value end)
-						end
-					end
+			if not propName or SKIP_PROPS[propName] then
+				continue
+			end
+
+			if propName == "Name" then
+				pcall(function() inst.Name = getText(propNode) end)
+			elseif propNode.tag == "Ref" then
+				local refId = string.gsub(getText(propNode), "%s+", "")
+				if refId ~= "" and refId ~= "null" and refId ~= "nil" then
+					table.insert(deferredRefs, { inst, propName, refId })
 				end
+			elseif propName == "Tags" and propNode.tag == "BinaryString" then
+				local decoded = b64decode(string.gsub(getText(propNode), "%s+", ""))
+				for _, tag in decodeTags(decoded) do
+					pcall(CollectionService.AddTag, CollectionService, inst, tag)
+				end
+			elseif propName == "AttributesSerialize" and propNode.tag == "BinaryString" then
+				local decoded = b64decode(string.gsub(getText(propNode), "%s+", ""))
+				for attrName, attrValue in decodeAttributes(decoded) do
+					pcall(inst.SetAttribute, inst, attrName, attrValue)
+				end
+			elseif PRIORITY_EARLY[propName] then
+				table.insert(earlyProps, propNode)
+			elseif PRIORITY_LATE[propName] then
+				table.insert(lateProps, propNode)
+			else
+				table.insert(normalProps, propNode)
 			end
 		end
+
+		applyBatch(earlyProps, inst, sharedStrings)
+		applyBatch(normalProps, inst, sharedStrings)
+		applyBatch(lateProps, inst, sharedStrings)
 	end
 
 	for _, childNode in itemNode.children do
@@ -652,6 +689,55 @@ local function buildInstance(
 	end
 
 	return inst
+end
+
+local function postProcess(instances: { Instance })
+	for _, root in instances do
+		local allDescs = root:GetDescendants()
+		table.insert(allDescs, root)
+
+		for _, desc in allDescs do
+			if not desc:IsA("ViewportFrame") then
+				continue
+			end
+
+			local hasWorldModel = false
+			for _, child in desc:GetChildren() do
+				if child:IsA("WorldModel") then
+					hasWorldModel = true
+					break
+				end
+			end
+
+			if hasWorldModel then
+				continue
+			end
+
+			local needsWorldModel = false
+			for _, child in desc:GetDescendants() do
+				if child:IsA("JointInstance") or child:IsA("WeldConstraint") then
+					needsWorldModel = true
+					break
+				end
+			end
+
+			if not needsWorldModel then
+				continue
+			end
+
+			local wm = Instance.new("WorldModel")
+			local toMove = {}
+			for _, child in desc:GetChildren() do
+				if child:IsA("BasePart") or child:IsA("Model") or child:IsA("Accessory") or child:IsA("Folder") then
+					table.insert(toMove, child)
+				end
+			end
+			for _, child in toMove do
+				child.Parent = wm
+			end
+			wm.Parent = desc
+		end
+	end
 end
 
 function RBXMXParser.Deserialize(rbxmxText: string, parent: Instance?): { Instance }
@@ -701,9 +787,11 @@ function RBXMXParser.Deserialize(rbxmxText: string, parent: Instance?): { Instan
 		local refId = ref[3] :: string
 		local target = referentMap[refId]
 		if target then
-			pcall(function() (inst :: any)[propName] = target end)
+			setProp(inst, propName, target)
 		end
 	end
+
+	postProcess(instances)
 
 	if parent then
 		for _, inst in instances do
