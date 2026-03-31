@@ -5158,7 +5158,7 @@
 									<int name="MaxVisibleGraphemes">-1</int>
 									<string name="OpenTypeFeatures"></string>
 									<bool name="RichText">false</bool>
-									<string name="Text">Looped</string>
+									<string name="Text">abcdefg</string>
 									<Color3 name="TextColor3">
 										<R>1</R>
 										<G>1</G>
