@@ -1,4 +1,4 @@
-local repo = "https://raw.githubusercontent.com/ybahopper/ui-for-vez/main/"
+local repo = "https://raw.githubusercontent.com/Vezise/ui-for-vez/main/"
 local load = function(f) return loadstring(game:HttpGet(repo .. f))() end
 local fetch = function(f) return game:HttpGet(repo .. f) end
 
@@ -69,6 +69,7 @@ local function playPreview(animationId)
 
 	currentTrack = previewAnimator:LoadAnimation(anim)
 	currentTrack:Play()
+	task.wait(currentTrack.Length)
     currentTrack.Looped = false
 	anim:Destroy()
 end
@@ -282,6 +283,16 @@ function lib:createLog(id, name, length, priority, callback)
 	return funcs
 end
 
+function lib:clearLogs()
+	for _, Log in CoreGui.AnimLoggerUI.Background.contain.left.contain.ScrollingFrame:GetChildren() do
+		if Log.Name == "logUn" or Log.Name == "UIListLayout" then
+			continue
+		else
+			Log:Destroy()
+		end
+	end
+end
+
 function lib:createTopToggle(name, callback)
 	local parent = AnimLoggerUI.Background.top.layout2
 	local toggle = parent.togglelog:Clone()
@@ -373,8 +384,10 @@ function lib:createBottomButton(name, callback)
 	local toggle = parent.clear:Clone()
 	toggle.Visible = true
 	toggle.Parent = parent
+	toggle.Name = name
 
 	local label = toggle.TextLabel
+	label.Name = name
 	label.Text = name
 	toggle.Size = UDim2.new(0, label.TextBounds.X + 25, 1, -20)
 
@@ -392,6 +405,16 @@ function lib:createBottomButton(name, callback)
 			end
 		end)
 	end
+end
+
+function lib:updateBottomButton(button, name)
+	local label = AnimLoggerUI.Background.contain.bottom.contain[button]
+	label[button].Text = name
+	label[button].Name = name
+	label.Name = name
+	label = AnimLoggerUI.Background.contain.bottom.contain[name]
+	
+	label.Size = UDim2.new(0, label.TextBounds.X + 25, 1, -20)
 end
 
 function lib:createButtomLine()
