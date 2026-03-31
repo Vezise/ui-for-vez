@@ -35,7 +35,9 @@ local currentTrack
 
 do
 	local Highlight = Instance.new("Highlight")
-	Highlight.OutlineColor = Color3.fromRGB(255, 255, 255)
+	Highlight.OutlineColor = Color3.fromRGB(0, 255, 0)
+	Highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+	
 	local worldModel = AnimLoggerUI.Background.little.contain.ViewportFrame.WorldModel
 	local rig = worldModel.Rig
 	local rigRootCFrame = (rig:FindFirstChild("HumanoidRootPart") or rig.PrimaryPart or rig:FindFirstChildWhichIsA("BasePart")).CFrame
