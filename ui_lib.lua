@@ -37,10 +37,10 @@ do
 	local Highlight = Instance.new("Highlight")
 	Highlight.OutlineColor = Color3.fromRGB(255, 255, 255)
 	local worldModel = AnimLoggerUI.Background.little.contain.ViewportFrame.WorldModel
-	Highlight.Parent = worldModel
-	Highlight.Adornee = worldModel
-	Highlight.Enabled = true
 	local rig = worldModel.Rig
+	Highlight.Parent = rig
+	Highlight.Adornee = rig
+	Highlight.Enabled = true
 	local rigRootCFrame = (rig:FindFirstChild("HumanoidRootPart") or rig.PrimaryPart or rig:FindFirstChildWhichIsA("BasePart")).CFrame
 	rig:Destroy()
 
