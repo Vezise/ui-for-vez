@@ -34,7 +34,10 @@ local previewAnimator
 local currentTrack
 
 do
+	local Highlight = Instance.new("Highlight")
+	Highlight.OutlineColor = Color3.fromRGB(255, 255, 255)
 	local worldModel = AnimLoggerUI.Background.little.contain.ViewportFrame.WorldModel
+	Highlight.Parent = worldModel
 	local rig = worldModel.Rig
 	local rigRootCFrame = (rig:FindFirstChild("HumanoidRootPart") or rig.PrimaryPart or rig:FindFirstChildWhichIsA("BasePart")).CFrame
 	rig:Destroy()
