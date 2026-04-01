@@ -34,10 +34,6 @@ local previewAnimator
 local currentTrack
 
 do
-	local Highlight = Instance.new("Highlight")
-	Highlight.OutlineColor = Color3.fromRGB(0, 255, 0)
-	Highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
-	
 	local worldModel = AnimLoggerUI.Background.little.contain.ViewportFrame.WorldModel
 	local rig = worldModel.Rig
 	local rigRootCFrame = (rig:FindFirstChild("HumanoidRootPart") or rig.PrimaryPart or rig:FindFirstChildWhichIsA("BasePart")).CFrame
@@ -48,9 +44,6 @@ do
 	local clone = char:Clone()
     clone.PrimaryPart.CFrame = rigRootCFrame
     clone.Parent = worldModel
-	Highlight.Parent = clone
-	Highlight.Adornee = clone
-	Highlight.Enabled = true
 
     previewAnimator = clone.Humanoid
 end
