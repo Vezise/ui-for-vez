@@ -223,7 +223,8 @@ end
 
 function lib:unstackTabs()
 	local Success, Error = pcall(function()
-		--[[stackingEnabled = false
+		stackingEnabled = false
+		--[[
 		local groups = getTabGroups()
 		for _, group in pairs(groups) do
 			if #group > 1 then
@@ -334,8 +335,6 @@ function lib:clearLogs()
 	end
 		
 	tabs = {}
-	stackingEnabled = false
-	stackingEnabled = true
 end
 
 function lib:createTopToggle(name, callback)
