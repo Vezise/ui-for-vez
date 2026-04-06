@@ -304,12 +304,26 @@ function lib:clearLogs()
 			ActiveTweens[Instance] = nil
 		end
 	end
+
+	for _, Entry in tabs do
+		if Entry.tab and Entry.tab.Parent then
+			Entry.tab:Destroy()
+		end
+			
+		if Entry.content and Entry.content.Parent then
+			Entry.content:Destroy()
+		end
+	end
 		
 	for _, Log in CoreGui.AnimLoggerUI.Background.contain.left.contain.ScrollingFrame:GetChildren() do
-		if Log.Name == "logUn" or Log.Name == "UIListLayout" then
-			continue
-		else
+		if Log.Name ~= "logUn" and Log.Name ~= "UIListLayout" then
 			Log:Destroy()
+		end
+	end
+
+	for _, Content in CoreGui.AnimLoggerUI.Background.contain.center:GetChildren() do
+		if Content.Name ~= "contain" then
+			Content:Destroy()
 		end
 	end
 		
