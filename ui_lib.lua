@@ -87,7 +87,7 @@ local contentTemplate = AnimLoggerUI.Background.contain.center.contain
 local tabs = {}
 
 local function selectTab(target)
-	for _, entry in ipairs(tabs) do
+	for _, entry in tabs do
 		local selected = (entry == target)
 		local log = entry.tab:FindFirstChild("log")
 
@@ -159,7 +159,7 @@ lib.stopPreview = stopPreview
 
 local function getTabGroups()
 	local groups = {}
-	for _, entry in ipairs(tabs) do
+	for _, entry in tabs do
 		local id = entry.tab.Name
 		if not groups[id] then
 			groups[id] = {}
@@ -271,27 +271,32 @@ function lib:createLog(id, name, length, priority, callback)
 	local entry = { tab = tab, content = content }
 	
 	local isDuplicate = false
+	local existingEntry = nil
+	
 	if stackingEnabled then
-		for _, existingEntry in tabs do
-			if existingEntry.tab.Name == id then
+		for _, checkEntry in tabs do
+			if checkEntry.tab.Name == id then
 				isDuplicate = true
-				
-				local duplicateCount = 1
-				for _, checkEntry in ipairs(tabs) do
-					if checkEntry.tab.Name == id then
-						duplicateCount = duplicateCount + 1
-					end
-				end
-				
-				updateStackIndicator(existingEntry, duplicateCount)
-				tab:Destroy()
-				content:Destroy()
+				existingEntry = checkEntry
 				break
 			end
 		end
 	end
+	
+	if isDuplicate and existingEntry then
+		local log = existingEntry.tab:FindFirstChild("log")
+		local multi = log and log:FindFirstChild("multi")
+		local currentCount = 1
+		
+		if multi and multi.Visible then
+			local countStr = multi.Text:match("x(%d+)")
+			currentCount = tonumber(countStr) or 1
+		end
 
-	if not isDuplicate then
+		updateStackIndicator(existingEntry, currentCount + 1)
+		tab:Destroy()
+		content:Destroy()
+	else
 		table.insert(tabs, entry)
 		tab.LayoutOrder = -#tabs
 
