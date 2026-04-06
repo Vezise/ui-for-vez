@@ -283,7 +283,6 @@ function lib:createLog(id, name, length, priority, callback)
 		end
 	end
 
-	funcs:makeProperty = nil 
 	if not isDuplicate then
 		table.insert(tabs, entry)
 		tab.LayoutOrder = -#tabs
@@ -297,7 +296,7 @@ function lib:createLog(id, name, length, priority, callback)
 			connectHover(button, tab, content)
 		end
 
-		funcs:makeProperty = function(name, val, color)
+		funcs.makeProperty = function(self, name, val, color)
 			local prop = content.propdif:Clone()
 			prop.Visible = true
 			prop.name.Text = name
