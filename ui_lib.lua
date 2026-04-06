@@ -13,6 +13,7 @@ if existing then existing:Destroy() end
 local RBXMXParser = load("RBXMXParser.lua")
 local AnimLoggerUI = RBXMXParser.Deserialize(fetch("ui_lib_1.rbxmx"), CoreGui)[1]
 
+local ActiveTweens = {}
 local TWEEN_FAST = TweenInfo.new(0.12, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
 local TWEEN_DEFAULT = TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
 
@@ -25,7 +26,13 @@ local Style = {
 }
 
 local function tween(instance, properties, info)
+	if ActiveTweens[instance] then
+		ActiveTweens[instance]:Cancel()
+	end
 	local t = TweenService:Create(instance, info or TWEEN_DEFAULT, properties)
+	t.Completed:Connect(function()
+		ActiveTweens[instance] = nil
+	end)
 	t:Play()
 	return t
 end
@@ -291,6 +298,13 @@ function lib:createLog(id, name, length, priority, callback)
 end
 
 function lib:clearLogs()
+	for Instance, Tween in ActiveTweens do
+		if Tween then
+			Tween:Cancel()
+			ActiveTweens[Instance] = nil
+		end
+	end
+		
 	for _, Log in CoreGui.AnimLoggerUI.Background.contain.left.contain.ScrollingFrame:GetChildren() do
 		if Log.Name == "logUn" or Log.Name == "UIListLayout" then
 			continue
@@ -298,6 +312,8 @@ function lib:clearLogs()
 			Log:Destroy()
 		end
 	end
+		
+	tabs = {}
 end
 
 function lib:createTopToggle(name, callback)
