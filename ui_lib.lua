@@ -238,19 +238,26 @@ function lib:createLog(id, name, length, priority, callback)
 
 	tween(tab, { Size = UDim2.new(1,0,0,43) }, TWEEN_DEFAULT)
 
+	
 	local content = contentTemplate:Clone()
-	content.Name = id
-	content.Visible = false
-	content.Parent = contentTemplate.Parent
 
-	content.name.value.Text = name
-	content.contain.length.value.Text = length
-	content.contain.priority.value.Text = priority
+	if not stackingEnabled then
+		content.Name = id
+		content.Visible = false
+		content.Parent = contentTemplate.Parent
+	
+		content.name.value.Text = name
+		content.contain.length.value.Text = length
+		content.contain.priority.value.Text = priority
+	end
+	
+	local entry = { tab = tab, content = content } or nil
 
-	local entry = { tab = tab, content = content }
-	table.insert(tabs, entry)
-	tab.LayoutOrder = -#tabs
-
+	if not stackingEnabled then
+		table.insert(tabs, entry)
+		tab.LayoutOrder = -#tabs
+	end
+	
 	local button = tab:FindFirstChildWhichIsA("TextButton", true)
 	if button then
 		button.MouseButton1Click:Connect(function()
