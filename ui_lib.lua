@@ -295,18 +295,19 @@ function lib:createLog(id, name, length, priority, callback)
 	        end)
 			connectHover(button, tab, content)
 		end
+
+		function funcs:makeProperty(name, val, color)
+			local prop = content.propdif:Clone()
+			prop.Visible = true
+			prop.name.Text = name
+			prop.value.Text = val
+			if color then
+				prop.value.TextColor3 = color
+			end
+			prop.Parent = content
+		end
 	end
 
-	function funcs:makeProperty(name, val, color)
-		local prop = content.propdif:Clone()
-		prop.Visible = true
-		prop.name.Text = name
-		prop.value.Text = val
-		if color then
-			prop.value.TextColor3 = color
-		end
-		prop.Parent = content
-	end
 
 	return funcs
 end
