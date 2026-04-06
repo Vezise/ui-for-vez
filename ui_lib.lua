@@ -205,7 +205,7 @@ function lib:stackTabs()
 			end
 		end
 	end)
-	if not Success then warn(`Crimson UI Library had an issue (stackTabs): {Error}` end
+	if not Success then warn(`Crimson UI Library had an issue (stackTabs): {Error}`) end
 end
 
 function lib:unstackTabs()
@@ -221,7 +221,7 @@ function lib:unstackTabs()
 			end
 		end
 	end)
-	if not Success then warn(`Crimson UI Library had an issue (unstackTabs: {Error}` end
+	if not Success then warn(`Crimson UI Library had an issue (unstackTabs: {Error}`) end
 end
 
 function lib:isStacking()
