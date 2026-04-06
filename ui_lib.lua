@@ -269,24 +269,31 @@ function lib:createLog(id, name, length, priority, callback)
 	content.contain.priority.value.Text = priority
 
 	local entry = { tab = tab, content = content }
-	table.insert(tabs, entry)
-	tab.LayoutOrder = -#tabs
-
-	local button = tab:FindFirstChildWhichIsA("TextButton", true)
-	if button then
-		button.MouseButton1Click:Connect(function()
-            selectTab(entry)
-            if callback then callback() end
-        end)
-		connectHover(button, tab, content)
-	end
-
+	
+	local isDuplicate = false
 	if stackingEnabled then
-		local groups = getTabGroups()
-		local group = groups[id]
-		if group and #group > 1 then
-			updateStackIndicator(group[1], #group)
-			hideTab(entry)
+		for _, existingEntry in tabs do
+			if existingEntry.tab.Name == id then
+				isDuplicate = true
+				updateStackIndicator(existingEntry, #tabs + 1)
+				tab:Destroy()
+				content:Destroy()
+				break
+			end
+		end
+	end
+	
+	if not isDuplicate then
+		table.insert(tabs, entry)
+		tab.LayoutOrder = -#tabs
+
+		local button = tab:FindFirstChildWhichIsA("TextButton", true)
+		if button then
+			button.MouseButton1Click:Connect(function()
+	            selectTab(entry)
+	            if callback then callback() end
+	        end)
+			connectHover(button, tab, content)
 		end
 	end
 
