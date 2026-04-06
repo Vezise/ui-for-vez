@@ -334,6 +334,8 @@ function lib:clearLogs()
 	end
 		
 	tabs = {}
+	stackingEnabled = false
+	stackingEnabled = true
 end
 
 function lib:createTopToggle(name, callback)
