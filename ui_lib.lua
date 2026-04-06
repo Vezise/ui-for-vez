@@ -159,6 +159,7 @@ local function getTabGroups()
 		end
 		table.insert(groups[id], entry)
 	end
+
 	return groups
 end
 
@@ -192,29 +193,35 @@ local function showTab(entry)
 end
 
 function lib:stackTabs()
-	stackingEnabled = true
-	local groups = getTabGroups()
-	for _, group in pairs(groups) do
-		if #group > 1 then
-			updateStackIndicator(group[1], #group)
-			for i = 2, #group do
-				hideTab(group[i])
+	local Success, Error = pcall(function()
+		stackingEnabled = true
+		local groups = getTabGroups()
+		for _, group in pairs(groups) do
+			if #group > 1 then
+				updateStackIndicator(group[1], #group)
+				for i = 2, #group do
+					hideTab(group[i])
+				end
 			end
 		end
-	end
+	end)
+	if not Success then warn(`Crimson UI Library had an issue (stackTabs): {Error}` end
 end
 
 function lib:unstackTabs()
-	stackingEnabled = false
-	local groups = getTabGroups()
-	for _, group in pairs(groups) do
-		if #group > 1 then
-			updateStackIndicator(group[1], nil)
-			for i = 2, #group do
-				showTab(group[i])
+	local Success, Error = pcall(function()
+		stackingEnabled = false
+		local groups = getTabGroups()
+		for _, group in pairs(groups) do
+			if #group > 1 then
+				updateStackIndicator(group[1], nil)
+				for i = 2, #group do
+					showTab(group[i])
+				end
 			end
 		end
-	end
+	end)
+	if not Success then warn(`Crimson UI Library had an issue (unstackTabs: {Error}` end
 end
 
 function lib:isStacking()
@@ -238,26 +245,19 @@ function lib:createLog(id, name, length, priority, callback)
 
 	tween(tab, { Size = UDim2.new(1,0,0,43) }, TWEEN_DEFAULT)
 
-	
 	local content = contentTemplate:Clone()
+	content.Name = id
+	content.Visible = false
+	content.Parent = contentTemplate.Parent
 
-	if not stackingEnabled then
-		content.Name = id
-		content.Visible = false
-		content.Parent = contentTemplate.Parent
-	
-		content.name.value.Text = name
-		content.contain.length.value.Text = length
-		content.contain.priority.value.Text = priority
-	end
-	
-	local entry = { tab = tab, content = content } or nil
+	content.name.value.Text = name
+	content.contain.length.value.Text = length
+	content.contain.priority.value.Text = priority
 
-	if not stackingEnabled then
-		table.insert(tabs, entry)
-		tab.LayoutOrder = -#tabs
-	end
-	
+	local entry = { tab = tab, content = content }
+	table.insert(tabs, entry)
+	tab.LayoutOrder = -#tabs
+
 	local button = tab:FindFirstChildWhichIsA("TextButton", true)
 	if button then
 		button.MouseButton1Click:Connect(function()
