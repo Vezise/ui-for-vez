@@ -275,7 +275,15 @@ function lib:createLog(id, name, length, priority, callback)
 		for _, existingEntry in tabs do
 			if existingEntry.tab.Name == id then
 				isDuplicate = true
-				updateStackIndicator(existingEntry, #tabs + 1)
+				
+				local duplicateCount = 1
+				for _, checkEntry in ipairs(tabs) do
+					if checkEntry.tab.Name == id then
+						duplicateCount = duplicateCount + 1
+					end
+				end
+				
+				updateStackIndicator(existingEntry, duplicateCount)
 				tab:Destroy()
 				content:Destroy()
 				break
@@ -297,7 +305,7 @@ function lib:createLog(id, name, length, priority, callback)
 		end
 	end
 		
-	function funcs:makeProperty( name, val, color)
+	function funcs:makeProperty(name, val, color)
 		if isDuplicate then
 			return
 		end
