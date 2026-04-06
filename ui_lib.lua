@@ -203,11 +203,17 @@ function lib:stackTabs()
 	local Success, Error = pcall(function()
 		stackingEnabled = true
 		local groups = getTabGroups()
-		for _, group in pairs(groups) do
+		for _, group in groups do
 			if #group > 1 then
 				updateStackIndicator(group[1], #group)
 				for i = 2, #group do
-					hideTab(group[i])
+					local entry = group[i]
+					if entry.tab and entry.tab.Parent then
+						entry.tab:Destroy()
+					end
+					if entry.content and entry.content.Parent then
+						entry.content:Destroy()
+					end
 				end
 			end
 		end
@@ -217,7 +223,7 @@ end
 
 function lib:unstackTabs()
 	local Success, Error = pcall(function()
-		stackingEnabled = false
+		--[[stackingEnabled = false
 		local groups = getTabGroups()
 		for _, group in pairs(groups) do
 			if #group > 1 then
@@ -226,7 +232,7 @@ function lib:unstackTabs()
 					showTab(group[i])
 				end
 			end
-		end
+		end]]
 	end)
 	if not Success then warn(`Crimson UI Library had an issue (unstackTabs: {Error}`) end
 end
