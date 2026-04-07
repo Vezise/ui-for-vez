@@ -71,6 +71,10 @@ local function playPreview(animationId)
 		currentTrack = nil
 	end
 
+	for _, Anim in previewAnimator:GetPlayingAnimationTracks() do
+		Anim:Stop(0)
+	end
+	
 	local anim = Instance.new("Animation")
 	anim.AnimationId = animationId
 
