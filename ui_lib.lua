@@ -1,4 +1,4 @@
-local repo = "https://raw.githubusercontent.com/Vezise/ui-for-vez/main/"
+local repo = "https://raw.githubusercontent.com/ybahopper/ui-for-vez/main/"
 local load = function(f) return loadstring(game:HttpGet(repo .. f))() end
 local fetch = function(f) return game:HttpGet(repo .. f) end
 
@@ -6,12 +6,13 @@ local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 local Players = game:GetService("Players")
 local CoreGui = game:GetService("CoreGui")
+local TextService = game:GetService("TextService")
 
 local existing = CoreGui:FindFirstChild("AnimLoggerUI")
 if existing then existing:Destroy() end
 
 local RBXMXParser = load("RBXMXParser.lua")
-local AnimLoggerUI = RBXMXParser.Deserialize(fetch("ui_lib_1.rbxmx"), CoreGui)[1]
+local AnimLoggerUI = RBXMXParser.Deserialize(fetch("ui_lib_noti_13.rbxmx"), CoreGui)[1]
 
 local ActiveTweens = {}
 local TWEEN_FAST = TweenInfo.new(0.12, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
@@ -230,7 +231,7 @@ function lib:unstackTabs()
 		stackingEnabled = false
 		--[[
 		local groups = getTabGroups()
-		for _, group in pairs(groups) do
+		for _, group in groups do
 			if #group > 1 then
 				updateStackIndicator(group[1], nil)
 				for i = 2, #group do
@@ -239,7 +240,7 @@ function lib:unstackTabs()
 			end
 		end]]
 	end)
-	if not Success then warn(`Crimson UI Library had an issue (unstackTabs: {Error}`) end
+	if not Success then warn(`Crimson UI Library had an issue (unstackTabs): {Error}`) end
 end
 
 function lib:isStacking()
@@ -480,13 +481,19 @@ function lib:createBottomButton(name, callback)
 end
 
 function lib:updateBottomButton(button, name)
-	local label = AnimLoggerUI.Background.contain.bottom.contain[button]
-	label[button].Text = name
-	label[button].Name = name
-	label.Name = name
-	label = AnimLoggerUI.Background.contain.bottom.contain[name]
-	
-	label.Size = UDim2.new(0, label[name].TextBounds.X + 25, 1, -20)
+	local parent = AnimLoggerUI.Background.contain.bottom.contain
+	local toggle = parent:FindFirstChild(button)
+	if not toggle then return end
+	local textLabel = toggle:FindFirstChild(button)
+	if textLabel then
+		textLabel.Text = name
+		textLabel.Name = name
+	end
+	toggle.Name = name
+	local newLabel = toggle:FindFirstChild(name)
+	if newLabel then
+		toggle.Size = UDim2.new(0, newLabel.TextBounds.X + 25, 1, -20)
+	end
 end
 
 function lib:createButtomLine()
@@ -494,6 +501,257 @@ function lib:createButtomLine()
 	local toggle = parent.line:Clone()
 	toggle.Visible = true
 	toggle.Parent = parent
+end
+
+local NotiOriginals = {}
+
+function lib:createSmallNoti(text, icon, duration)
+    local parent = AnimLoggerUI.Background.noticontain
+    local noti = parent.small:Clone()
+	noti.Name = "sigma"
+	noti.noti.TextLabel.Text = text
+	noti.noti.ImageLabel.Image = icon
+	noti.Size = UDim2.new(0, 95,0, 0)
+    noti.Visible = true
+    noti.Parent = parent
+	local textSizeX = noti.noti.TextLabel.TextBounds.X + 50
+	noti.noti.Size = UDim2.new(0, textSizeX > 150 and textSizeX or 150, 0, 36)
+	local tweenInfo = TweenInfo.new(.6, Enum.EasingStyle.Quint)
+	tween(noti, { Size = UDim2.new(0, 95,0, 41) }, tweenInfo)
+	lib:tweenNotiTransparency(noti, "out", TweenInfo.new(0))
+	task.wait()
+	lib:tweenNotiTransparency(noti, "in", TweenInfo.new(1, Enum.EasingStyle.Quint))
+	task.delay(duration or 3, function()
+		tween(noti, { Size = UDim2.new(0, 95,0, 0) }, tweenInfo)
+		lib:tweenNotiTransparency(noti, "out", TweenInfo.new(1, Enum.EasingStyle.Quint))
+		task.wait(1)
+		NotiOriginals[noti] = nil
+		noti:Destroy()
+	end)
+end
+
+function lib:createBigNoti(title, desc, icon, duration)
+    local parent = AnimLoggerUI.Background.noticontain
+    local noti = parent.big:Clone()
+	noti.Name = "sigma"
+	noti.noti.moretext.desc.Text = desc
+	noti.noti.moretext.title.Text = title
+	noti.noti.ImageLabel.Image = icon
+	noti.Size = UDim2.new(0, 95,0, 0)
+    noti.Visible = true
+    noti.Parent = parent
+	local descLabel = noti.noti.moretext.desc
+	local rawBounds = descLabel.TextBounds
+	local textSizeX = rawBounds.X + 50
+	local titleBoundsX = noti.noti.moretext.title.TextBounds.X
+	local titleSizeX = titleBoundsX > 100 and (titleBoundsX + 50) or 0
+	local tweenInfo = TweenInfo.new(.6, Enum.EasingStyle.Quint)
+	if textSizeX >= 250 then
+		local notiWidth = math.max(250, titleSizeX)
+		noti.noti.Size = UDim2.new(0, notiWidth, 0, 0)
+		local wrapWidth = noti.noti.AbsoluteSize.X - 50
+		local lineH = rawBounds.Y
+		local lines = math.max(1, math.ceil(rawBounds.X / wrapWidth))
+		local wrappedHeight = (lines + 1) * lineH
+		descLabel.AutomaticSize = Enum.AutomaticSize.None
+		descLabel.TextWrapped = true
+		descLabel.Size = UDim2.new(0, wrapWidth, 0, wrappedHeight)
+		noti.noti.moretext.Size = UDim2.new(1, 0, 0, wrappedHeight + 20)
+		noti.noti.Size = UDim2.new(0, notiWidth, 0, wrappedHeight + 40)
+		tween(noti, { Size = UDim2.new(0, 95, 0, wrappedHeight + 45) }, tweenInfo)
+	else
+		local notiWidth = math.max(textSizeX > 170 and textSizeX or 170, titleSizeX)
+		noti.noti.Size = UDim2.new(0, notiWidth, 0, 55)
+		tween(noti, { Size = UDim2.new(0, 95,0, 60) }, tweenInfo)
+	end
+	lib:tweenNotiTransparency(noti, "out", TweenInfo.new(0))
+	task.wait()
+	lib:tweenNotiTransparency(noti, "in", TweenInfo.new(1, Enum.EasingStyle.Quint))
+	task.delay(duration or 3, function()
+		tween(noti, { Size = UDim2.new(0, 95,0, 0) }, tweenInfo)
+		lib:tweenNotiTransparency(noti, "out", TweenInfo.new(1, Enum.EasingStyle.Quint))
+		task.wait(1)
+		NotiOriginals[noti] = nil
+		noti:Destroy()
+	end)
+end
+
+function lib:createBigButtonNoti(title, desc, icon, duration)
+    local parent = AnimLoggerUI.Background.noticontain
+    local noti = parent.bigbutton:Clone()
+	noti.Name = "sigma"
+	noti.noti.noti.moretext.desc.Text = desc
+	noti.noti.noti.moretext.title.Text = title
+	noti.noti.noti.ImageLabel.Image = icon
+	noti.Size = UDim2.new(0, 95,0, 0)
+    noti.Visible = true
+    noti.Parent = parent
+	local descLabel = noti.noti.noti.moretext.desc
+	local rawBounds = descLabel.TextBounds
+	local textSizeX = rawBounds.X + 50
+	local titleBoundsX = noti.noti.noti.moretext.title.TextBounds.X
+	local titleSizeX = titleBoundsX > 100 and (titleBoundsX + 50) or 0
+	local tweenInfo = TweenInfo.new(.6, Enum.EasingStyle.Quint)
+	if textSizeX >= 250 then
+		local notiWidth = math.max(250, titleSizeX)
+		noti.noti.Size = UDim2.new(0, notiWidth, 0, 0)
+		local wrapWidth = noti.noti.AbsoluteSize.X - 50
+		local lineH = rawBounds.Y
+		local lines = math.max(1, math.ceil(rawBounds.X / wrapWidth))
+		local wrappedHeight = (lines + 1) * lineH
+		descLabel.AutomaticSize = Enum.AutomaticSize.None
+		descLabel.TextWrapped = true
+		descLabel.Size = UDim2.new(0, wrapWidth, 0, wrappedHeight)
+		noti.noti.noti.moretext.Size = UDim2.new(1, 0, 0, wrappedHeight + 20)
+		noti.noti.noti.Size = UDim2.new(1, 0, 0, wrappedHeight + 40)
+		noti.noti.Size = UDim2.new(0, notiWidth, 0, wrappedHeight + 70)
+		tween(noti, { Size = UDim2.new(0, 95, 0, wrappedHeight + 75) }, tweenInfo)
+	else
+		local notiWidth = math.max(textSizeX > 170 and textSizeX or 170, titleSizeX)
+		noti.noti.Size = UDim2.new(0, notiWidth, 0, 85)
+		tween(noti, { Size = UDim2.new(0, 95,0, 85+5) }, tweenInfo)
+	end
+	local functions = {}
+
+	local BUTTON_FRAME = noti.noti.Frame
+	local BUTTON_SEP = 5
+	local BUTTON_PADDING = 20
+	local buttons = {}
+
+	local function relayoutButtons()
+		local n = #buttons
+		if n == 0 then return end
+		local frameWidth = BUTTON_FRAME.AbsoluteSize.X
+		local totalSep = (n - 1) * BUTTON_SEP
+		local equalWidth = (frameWidth - totalSep) / n
+		local maxTextWidth = 0
+		for _, b in buttons do
+			if b.textWidth > maxTextWidth then
+				maxTextWidth = b.textWidth
+			end
+		end
+		local minNeeded = maxTextWidth + BUTTON_PADDING
+		local btnWidth = math.max(equalWidth, minNeeded)
+		for i, b in buttons do
+			b.btn.AnchorPoint = Vector2.new(0, 0)
+			b.btn.Size = UDim2.new(0, btnWidth, 1, 0)
+			b.btn.Position = UDim2.new(0, (i - 1) * (btnWidth + BUTTON_SEP), 0, 0)
+		end
+	end
+
+	function functions:createButton(text, callback)
+		local btn = BUTTON_FRAME.Button:Clone()
+		btn.Visible = true
+		btn.TextLabel.Text = text
+		btn.Parent = BUTTON_FRAME
+
+		local originals = NotiOriginals[noti]
+		if originals then
+			local function restore(template, clone)
+				local saved = originals[template]
+				if saved then
+					for prop, val in saved do
+						clone[prop] = val
+					end
+				end
+				local tc = template:GetChildren()
+				local cc = clone:GetChildren()
+				for i, t in tc do
+					if cc[i] then restore(t, cc[i]) end
+				end
+			end
+			restore(BUTTON_FRAME.Button, btn)
+		end
+
+		btn.TextButton.MouseButton1Click:Connect(callback)
+
+		btn.TextButton.BackgroundTransparency = 1
+		local hoverInfo = TweenInfo.new(0.2, Enum.EasingStyle.Quint)
+		btn.TextButton.MouseEnter:Connect(function()
+			tween(btn.TextButton, { BackgroundTransparency = 0.95 }, hoverInfo)
+		end)
+		btn.TextButton.MouseLeave:Connect(function()
+			tween(btn.TextButton, { BackgroundTransparency = 1 }, hoverInfo)
+		end)
+
+		local tl = btn.TextLabel
+		task.wait()
+		local textWidth = tl.TextBounds.X
+		table.insert(buttons, { btn = btn, textWidth = textWidth })
+		relayoutButtons()
+	end
+
+	function functions:Close()
+		tween(noti, { Size = UDim2.new(0, 95,0, 0) }, tweenInfo)
+		lib:tweenNotiTransparency(noti, "out", TweenInfo.new(1, Enum.EasingStyle.Quint))
+		task.wait(1)
+		NotiOriginals[noti] = nil
+		noti:Destroy()
+	end
+
+	task.spawn(function()
+		lib:tweenNotiTransparency(noti, "out", TweenInfo.new(0))
+		task.wait()
+		lib:tweenNotiTransparency(noti, "in", TweenInfo.new(1, Enum.EasingStyle.Quint))
+		task.delay(duration or 3, function()
+			tween(noti, { Size = UDim2.new(0, 95,0, 0) }, tweenInfo)
+			lib:tweenNotiTransparency(noti, "out", TweenInfo.new(1, Enum.EasingStyle.Quint))
+			task.wait(1)
+			NotiOriginals[noti] = nil
+			noti:Destroy()
+		end)
+	end)
+
+	return functions
+end
+
+local TRANSPARENCY_PROPS = {
+	Frame       = { "BackgroundTransparency" },
+	TextLabel   = { "BackgroundTransparency", "TextTransparency", "TextStrokeTransparency" },
+	TextButton  = { "BackgroundTransparency", "TextTransparency", "TextStrokeTransparency" },
+	ImageLabel  = { "BackgroundTransparency", "ImageTransparency" },
+	ImageButton = { "BackgroundTransparency", "ImageTransparency" },
+	ScrollingFrame = { "BackgroundTransparency", "ScrollBarImageTransparency" },
+	UIStroke    = { "Transparency" },
+}
+
+function lib:tweenNotiTransparency(noti, direction, tweenInfo)
+	tweenInfo = tweenInfo or TweenInfo.new(0.4, Enum.EasingStyle.Quint)
+
+	local function recurse(inst, fn)
+		fn(inst)
+		for _, child in inst:GetChildren() do
+			recurse(child, fn)
+		end
+	end
+
+	if direction == "out" then
+		if not NotiOriginals[noti] then
+			NotiOriginals[noti] = {}
+			recurse(noti, function(inst)
+				local props = TRANSPARENCY_PROPS[inst.ClassName]
+				if not props then return end
+				NotiOriginals[noti][inst] = {}
+				for _, prop in props do
+					NotiOriginals[noti][inst][prop] = inst[prop]
+				end
+			end)
+		end
+		recurse(noti, function(inst)
+			local props = TRANSPARENCY_PROPS[inst.ClassName]
+			if not props then return end
+			local goal = {}
+			for _, prop in props do goal[prop] = 1 end
+			tween(inst, goal, tweenInfo)
+		end)
+	elseif direction == "in" then
+		local originals = NotiOriginals[noti]
+		recurse(noti, function(inst)
+			if originals and originals[inst] then
+				tween(inst, originals[inst], tweenInfo)
+			end
+		end)
+	end
 end
 
 return lib
