@@ -2,6 +2,7 @@ local repo = "https://raw.githubusercontent.com/ybahopper/ui-for-vez/main/"
 local load = function(f) return loadstring(game:HttpGet(repo .. f))() end
 local fetch = function(f) return game:HttpGet(repo .. f) end
 
+getgenv().UnpAcK = base64decode
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 local Players = game:GetService("Players")
