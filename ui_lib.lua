@@ -514,13 +514,16 @@ function lib:createSmallNoti(text, icon, duration)
 	noti.Size = UDim2.new(0, 95,0, 0)
     noti.Visible = true
     noti.Parent = parent
+	
 	local textSizeX = noti.noti.TextLabel.TextBounds.X + 50
 	noti.noti.Size = UDim2.new(0, textSizeX > 150 and textSizeX or 150, 0, 36)
+	
 	local tweenInfo = TweenInfo.new(.6, Enum.EasingStyle.Quint)
 	tween(noti, { Size = UDim2.new(0, 95,0, 41) }, tweenInfo)
 	lib:tweenNotiTransparency(noti, "out", TweenInfo.new(0))
 	task.wait()
 	lib:tweenNotiTransparency(noti, "in", TweenInfo.new(1, Enum.EasingStyle.Quint))
+	
 	task.delay(duration or 3, function()
 		tween(noti, { Size = UDim2.new(0, 95,0, 0) }, tweenInfo)
 		lib:tweenNotiTransparency(noti, "out", TweenInfo.new(1, Enum.EasingStyle.Quint))
@@ -546,6 +549,7 @@ function lib:createBigNoti(title, desc, icon, duration)
 	local titleBoundsX = noti.noti.moretext.title.TextBounds.X
 	local titleSizeX = titleBoundsX > 100 and (titleBoundsX + 50) or 0
 	local tweenInfo = TweenInfo.new(.6, Enum.EasingStyle.Quint)
+	
 	if textSizeX >= 250 then
 		local notiWidth = math.max(250, titleSizeX)
 		noti.noti.Size = UDim2.new(0, notiWidth, 0, 0)
@@ -564,9 +568,11 @@ function lib:createBigNoti(title, desc, icon, duration)
 		noti.noti.Size = UDim2.new(0, notiWidth, 0, 55)
 		tween(noti, { Size = UDim2.new(0, 95,0, 60) }, tweenInfo)
 	end
+	
 	lib:tweenNotiTransparency(noti, "out", TweenInfo.new(0))
 	task.wait()
 	lib:tweenNotiTransparency(noti, "in", TweenInfo.new(1, Enum.EasingStyle.Quint))
+	
 	task.delay(duration or 3, function()
 		tween(noti, { Size = UDim2.new(0, 95,0, 0) }, tweenInfo)
 		lib:tweenNotiTransparency(noti, "out", TweenInfo.new(1, Enum.EasingStyle.Quint))
@@ -625,13 +631,16 @@ function lib:createBigButtonNoti(title, desc, icon, duration)
 		local totalSep = (n - 1) * BUTTON_SEP
 		local equalWidth = (frameWidth - totalSep) / n
 		local maxTextWidth = 0
+		
 		for _, b in buttons do
 			if b.textWidth > maxTextWidth then
 				maxTextWidth = b.textWidth
 			end
 		end
+		
 		local minNeeded = maxTextWidth + BUTTON_PADDING
 		local btnWidth = math.max(equalWidth, minNeeded)
+		
 		for i, b in buttons do
 			b.btn.AnchorPoint = Vector2.new(0, 0)
 			b.btn.Size = UDim2.new(0, btnWidth, 1, 0)
